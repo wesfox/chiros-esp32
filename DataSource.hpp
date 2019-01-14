@@ -1,3 +1,8 @@
+// DataSource.hpp
+
+#ifndef DATA_SOURCE_H
+#define DATA_SOURCE_H
+
 class DataSource {
   public:
       DataSource();
@@ -13,3 +18,5 @@ class DataSource {
 
       String uid;
 };
+
+#endif
