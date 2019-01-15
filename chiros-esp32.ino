@@ -1,6 +1,10 @@
 #include <map>
 
 #include <ArduinoJson.h>
+#include <Adafruit_NeoPixel.h>
+#ifdef __AVR__
+  #include <avr/power.h>
+#endif
 
 #include <WiFi.h>
 #include <WiFiClient.h>
@@ -58,12 +62,22 @@ using namespace std;
 ///////////////
 ///
 
-const char* ssid = "Dinosorus";
-const char* password = "LaRicanerieDeDinosorus";
+const char* ssid = "{VIA}";
+const char* password = "connexion";
+
+// BVR
+Adafruit_NeoPixel pixels = Adafruit_NeoPixel(1, 14, NEO_GRB + NEO_KHZ800);
 
 void pinSetup(){
   pinMode(4, OUTPUT);
   digitalWrite(4, LOW);
+  
+}
+
+void customSetup() {
+  pixels.begin();
+  pixels.setPixelColor(0, pixels.Color(40,40,100));
+  pixels.show();
 }
 
 void handleSwitch(){
@@ -74,6 +88,18 @@ void handleSwitch(){
   alfred.getDataSource("state").serializedState = state ? "true" : "false";
   server.send(200, "text/plain", "switched");
   alfred.sendState();
+}
+
+void handleColor() {
+  JsonObject& body = extractPostedPayload();
+   if(body.size()==0){
+    return handleErrorNoPayload();
+   }
+   pixels.setPixelColor(0, pixels.Color((int)body["r"], (int)body["v"], (int)body["b"])); // Moderately bright green color.
+
+   pixels.show(); // This sends the updated pixel color to the hardware.
+
+   server.send(200, "text/plain", "rvb");
 }
 
 // custom routes
@@ -88,6 +114,8 @@ void initCustomRoutes(){
   server.on("/off", []() {
     digitalWrite(4, LOW);
   });
+
+  server.on("/setColor", handleColor);
 
   ///////
   // basic routing style
@@ -145,6 +173,7 @@ void initRouting(){
 void setup(void) {
  Serial.begin(115200);
  pinSetup();
+ customSetup();
 
  // conntect to the wifi network as
  // specified on top of the program
