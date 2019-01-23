@@ -11,12 +11,35 @@ void handleConfig() {
    server.send(200, "text/json", objConfig);
 }
 
+void handleSetPush(){
+   JsonObject& body = request.parseBody();
+   if(body.size()==0){
+    return handleErrorNoPayload();
+   }
+
+   alfred.setTimeBetweenPushForDS(body["time"], body["dataSourceId"]);
+   server.send(200, "text/plain", "Server config has been set");
+}
+
 void handleSetConfig(){
-   JsonObject& registerPayload = extractPostedPayload();
+//   {
+//    "ip":"192.168.1.43",
+//    "uid":"sfads-qwe-sddqwe",
+//    "port":8000,
+//    "data-source-ids": {
+//      "name1":"131fs-safd23-sfsfd1",
+//      "name2":"qwe-dfs-123",
+//      ...
+//    }
+//   }
+   JsonObject& registerPayload = request.parseBody();
    if(registerPayload.size()==0){
     return handleErrorNoPayload();
    }
-   alfred = Alfred(registerPayload["ip"], registerPayload["uid"], registerPayload["port"], registerPayload["data-source-ids"]);
+   // {"url": "127.0.0.1", "port": "8000", "id": "dc031f15-a3cf-4a75-8c9e-6e02e7ff80e7", "data-source-ids": {"state": "99e5e872-a9e4-4d22-806a-45e1bf54fedc"}}
+   Serial.println("registerPayload : ");
+   registerPayload.printTo(Serial);
+   alfred = Alfred(registerPayload["url"], registerPayload["id"], registerPayload["port"], registerPayload["data-source-ids"]);
    alfred.showConf();
    server.send(200, "text/plain", "Server config has been set");
 }

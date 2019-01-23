@@ -7,6 +7,7 @@
 void handleConfig();
 void handleSetConfig();
 void handleRoot();
+void handleSetPush();
 
 // errors
 void handleNotFound();

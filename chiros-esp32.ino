@@ -1,16 +1,17 @@
 #include <map>
 
 #include <ArduinoJson.h>
-#include <Adafruit_NeoPixel.h>
-#ifdef __AVR__
-  #include <avr/power.h>
-#endif
+// https://github.com/Makuna/NeoPixelBus/blob/master/examples/NeoPixelTest/NeoPixelTest.ino
+#include <NeoPixelBus.h>
+#include <Preferences.h>
 
 #include <WiFi.h>
 #include <WiFiClient.h>
 #include <HTTPClient.h>
 #include <WebServer.h>
 #include <ESPmDNS.h>
+#include "EEPROM.h"
+
 
 #include "Alfred.hpp"
 #include "DataSource.hpp"
@@ -37,6 +38,16 @@ using namespace std;
 //            ]
 //        },
 //        {
+//            "name": "rgb_color",
+//            "command": "/setColor",
+//            "payloads": [
+//                {
+//                    "name": "rgb_color",
+//                    "type": "string"
+//                }
+//            ]
+//        },
+//        {
 //            "name": "on",
 //            "command": "/on"
 //        },
@@ -52,6 +63,12 @@ using namespace std;
 //            "endpoint": "/state",
 //            "data-type": "boolean",
 //            "data-polling-type": "ON_REQUEST"
+//        },{
+//            "name": "rgb_color",
+//            "description": "return the current strip color",
+//            "endpoint": "/setColor",
+//            "data-type": "string",
+//            "data-polling-type": "ON_REQUEST"
 //        }
 //    ]
 //}
@@ -62,44 +79,85 @@ using namespace std;
 ///////////////
 ///
 
-const char* ssid = "{VIA}";
-const char* password = "connexion";
+const char* ssid = "Dinosorus";
+const char* password = "LaRicanerieDeDinosorus";
+//const char* ssid = "{VIA}";
+//const char* password = "connexion";
+//const char* ssid = "Livebox-BABA";
+//const char* password = "HRZxJmJyUjWPb7Cymw";
 
 // BVR
-Adafruit_NeoPixel pixels = Adafruit_NeoPixel(1, 14, NEO_GRB + NEO_KHZ800);
+// Adafruit_NeoPixel pixels = Adafruit_NeoPixel(3, 14, NEO_KHZ800 + NEO_GRB);
+const uint16_t PixelCount = 2; // this example assumes 4 pixels, making it smaller will cause a failure
+const uint8_t PixelPin = 25;  // make sure to set this to the correct pin, ignored for Esp8266
+NeoPixelBus<NeoGrbFeature, Neo800KbpsMethod> pixels(PixelCount, PixelPin);
+
+const uint8_t SwitchPin = 17;
 
 void pinSetup(){
-  pinMode(4, OUTPUT);
-  digitalWrite(4, LOW);
-  
+  pinMode(SwitchPin, OUTPUT);
+  digitalWrite(SwitchPin, LOW);
 }
 
+RgbColor red(20, 0, 0);
+RgbColor green(0, 20, 0);
+RgbColor blue(0, 0, 20);
+
 void customSetup() {
-  pixels.begin();
-  pixels.setPixelColor(0, pixels.Color(40,40,100));
-  pixels.show();
+  pixels.Begin();
+  pixels.SetPixelColor(0, red);
+  pixels.SetPixelColor(1, green);
+  pixels.Show();
 }
 
 void handleSwitch(){
-  Serial.println("/switch reached.");
   // we cannot use HIGH and LOW as we want to make sure to use 0 or 1.
-  int state = digitalRead(4) ? 0 : 1;
-  digitalWrite(4, state);
+  int state = digitalRead(SwitchPin) ? 0 : 1;
+  digitalWrite(SwitchPin, state);
   alfred.getDataSource("state").serializedState = state ? "true" : "false";
-  server.send(200, "text/plain", "switched");
-  alfred.sendState();
+  server.send(200, "text/plain", "Lamped switched " + String(state ? "on" : "off"));
+  alfred.sendState("state");
+  Serial.println("/switch - Lamped switched " + String(state ? "on" : "off"));
 }
 
 void handleColor() {
-  JsonObject& body = extractPostedPayload();
+    JsonObject& body = request.parseBody();
    if(body.size()==0){
     return handleErrorNoPayload();
    }
-   pixels.setPixelColor(0, pixels.Color((int)body["r"], (int)body["v"], (int)body["b"])); // Moderately bright green color.
+   
+   String strColor = body["payload"];
+   int r,v,b;
+   int color=0;
+   int startNumPos=0;
+   for(int i=0;i!=strColor.length();++i){
+      if(strColor[i]=='-'){
+        switch(++color){
+          case 1:
+            r = strColor.substring(startNumPos,i).toInt();
+            break;
+          case 2:
+            v = strColor.substring(startNumPos,i).toInt();
+            break;
+        }
+        startNumPos=i+1;
+      }
+   }
+   if(color!=2){
+      server.send(401, "text/plain", "Error while reading payload");
+   }else{
+      b = strColor.substring(startNumPos,strColor.length()).toInt();
+   }
+   RgbColor payloadColor(r, v, b);
+   pixels.ClearTo(payloadColor); // Moderately bright green color.
 
-   pixels.show(); // This sends the updated pixel color to the hardware.
+   pixels.Show(); // This sends the updated pixel color to the hardware.
 
-   server.send(200, "text/plain", "rvb");
+   server.send(200, "text/plain", "RGB led strip set to " + strColor);
+   Serial.println("/setColor - RGB led strip set to " + strColor);
+   
+    alfred.getDataSource("rgb_color").serializedState = strColor;
+    alfred.sendState("rgb_color");
 }
 
 // custom routes
@@ -109,10 +167,18 @@ void initCustomRoutes(){
   
   server.on("/switch", handleSwitch);
   server.on("/on", []() {
-    digitalWrite(4, HIGH);
+    digitalWrite(SwitchPin, HIGH);
+    alfred.getDataSource("state").serializedState = "true";
+    alfred.sendState("state");
+    server.send(200, "text/plain", "Lamped switched on");
+    Serial.println("/on - Lamped switched on");
   });
   server.on("/off", []() {
-    digitalWrite(4, LOW);
+    digitalWrite(SwitchPin, LOW);
+    alfred.getDataSource("state").serializedState = "false";
+    alfred.sendState("state");
+    server.send(200, "text/plain", "Lamped switched off");
+    Serial.println("/on - Lamped switched off");
   });
 
   server.on("/setColor", handleColor);
@@ -159,6 +225,7 @@ void initWifi(){
 
 void initRouting(){
   server.on("/", handleRoot);
+  server.on("/setpush", handleSetPush);
 
   // default routes
   server.on("/config", handleConfig);
@@ -171,31 +238,35 @@ void initRouting(){
 // SETUP
 
 void setup(void) {
- Serial.begin(115200);
- pinSetup();
- customSetup();
-
- // conntect to the wifi network as
- // specified on top of the program
- initWifi();
-
- if (MDNS.begin("esp32")) {
+  Serial.begin(115200);
+  
+  // loadFromEEPROM only if it have been saved previously
+  alfred.loadFromEEPROM();
+  
+  pinSetup();
+  customSetup();
+  
+  // conntect to the wifi network as
+  // specified on top of the program
+  initWifi();
+  
+  if (MDNS.begin("esp32")) {
   Serial.println("MDNS responder started");
- }
-
- // define all routes callable
- initRouting();
-
- // raise an error if another route is called
- server.onNotFound(handleNotFound);
-
- server.begin();
- Serial.println("HTTP server started");
+  }
+  
+  // define all routes callable
+  initRouting();
+  
+  // raise an error if another route is called
+  server.onNotFound(handleNotFound);
+  
+  server.begin();
+  Serial.println("HTTP server started");
 }
 
 /////////
 // LOOP
-
 void loop(void) {
   server.handleClient();
+  alfred.checkForDataToPush();
 }
