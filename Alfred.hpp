@@ -1,14 +1,25 @@
 // Alfred.hpp
 
 #include "DataSource.hpp"
+#include "utils.hpp"
 
 #ifndef ALFRED_H
 #define ALFRED_H
 
+#define ERROR_ALFRED_NO_PAYLOAD 1
+
+typedef void (*pinSetupFunc)();
+typedef void (*customSetupFunc)();
+typedef void (*initCustomRoutesFunc)();
+
 class Alfred {
    public:
       Alfred();
-      Alfred(const char* url, const char* uid, int port, JsonObject& dataSourceIds);
+      
+      void init(const char* url, const char* uid, int port, JsonObject& dataSourceIds);
+
+      void alfredSetup(pinSetupFunc, customSetupFunc, initCustomRoutesFunc, const char * ssid, const char * password);
+      void handleError(int errorDef);
 
       void saveToEEPROM();
       void loadFromEEPROM();
@@ -29,6 +40,13 @@ class Alfred {
       int nbDataSources;
       
       bool initialized;
+      WebServer server;
 };
+
+extern Alfred alfred;
+extern const char* objConfig;
+extern Preferences preferences;
+extern Request request;
+extern WebServer server;
 
 #endif

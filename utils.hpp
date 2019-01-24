@@ -3,9 +3,6 @@
 #include <WebServer.h>
 #include <Preferences.h>
 
-
-#include "Alfred.hpp"
-
 #ifndef UTILS_H
 #define UTILS_H
 
@@ -21,10 +18,6 @@ class Request{
     JsonObject& parseBody();
 };
 
-extern const char* objConfig;
-extern WebServer server;
-extern Alfred alfred;
-extern Preferences preferences;
-extern Request request;
+void initWifi(const char * ssid, const char * password);
 
 #endif

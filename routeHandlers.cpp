@@ -39,7 +39,7 @@ void handleSetConfig(){
    // {"url": "127.0.0.1", "port": "8000", "id": "dc031f15-a3cf-4a75-8c9e-6e02e7ff80e7", "data-source-ids": {"state": "99e5e872-a9e4-4d22-806a-45e1bf54fedc"}}
    Serial.println("registerPayload : ");
    registerPayload.printTo(Serial);
-   alfred = Alfred(registerPayload["url"], registerPayload["id"], registerPayload["port"], registerPayload["data-source-ids"]);
+   alfred.init(registerPayload["url"], registerPayload["id"], registerPayload["port"], registerPayload["data-source-ids"]);
    alfred.showConf();
    server.send(200, "text/plain", "Server config has been set");
 }

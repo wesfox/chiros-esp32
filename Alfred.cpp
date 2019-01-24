@@ -3,14 +3,18 @@
 #include "utils.hpp"
 #include "Alfred.hpp"
 #include "DataSource.hpp"
+#include "routeHandlers.hpp"
+
+const char* objConfig = "{\n \"name\": \"coolObject\",\n \"type\": \"lamp\",\n \"actions\": [\n {\n \"name\": \"switch\",\n \"command\": \"\/switch\",\n \"payloads\": [\n {\n \"name\": \"switch\",\n \"type\": \"boolean\"\n }\n ]\n },\n {\n \"name\": \"rgb_color\",\n \"command\": \"\/setColor\",\n \"payloads\": [\n {\n \"name\": \"rgb_color\",\n \"type\": \"string\"\n }\n ]\n },\n {\n \"name\": \"on\",\n \"command\": \"\/on\"\n },\n {\n \"name\": \"off\",\n \"command\": \"\/off\"\n }\n ],\n \"data-source\": [\n {\n \"name\": \"state\",\n \"description\": \"return the state\",\n \"endpoint\": \"\/state\",\n \"data-type\": \"boolean\",\n \"data-polling-type\": \"ON_REQUEST\"\n },{\n \"name\": \"rgb_color\",\n \"description\": \"return the current strip color\",\n \"endpoint\": \"\/setColor\",\n \"data-type\": \"string\",\n \"data-polling-type\": \"ON_REQUEST\"\n }\n ]\n}";
+Preferences preferences;
+Request request;
 
 // Alfred.cpp
-
 Alfred::Alfred() {
-  this->initialized = false;  
+  this->initialized = false;
 }
 
-Alfred::Alfred(const char* url, const char* uid, int port, JsonObject& dataSourceIds) {
+void Alfred::init(const char* url, const char* uid, int port, JsonObject& dataSourceIds) {
   StaticJsonBuffer<ALFRED_SERIAL_SIZE> jsonBuffer;
 
   JsonObject& jsonConfig = jsonBuffer.parseObject(objConfig);
@@ -201,6 +205,16 @@ DataSource& Alfred::getDataSource(String dataSourceName){
   server.send(500, "Internal Error : unkown dataSourceName");
 }
 
+void Alfred::handleError(int errorDef){
+  switch(errorDef){
+    case ERROR_ALFRED_NO_PAYLOAD:
+      handleErrorNoPayload();
+    break;
+    default:
+    break;
+  }
+}
+
 void Alfred::showConf() {
   Serial.print("url : ");
   Serial.println(this->url);
@@ -215,4 +229,37 @@ void Alfred::showConf() {
   for(int i=0; i!=this->nbDataSources; i++){
     Serial.println(this->dataSourceList[i].toString());
   }
+}
+
+void initRouting(){
+  server.on("/", handleRoot);
+  server.on("/setpush", handleSetPush);
+
+  // default routes
+  server.on("/config", handleConfig);
+  server.on("/serverConfig", handleSetConfig);
+}
+
+void Alfred::alfredSetup(pinSetupFunc, customSetupFunc, initCustomRoutesFunc, const char * ssid, const char * password){
+  
+  customSetupFunc();
+  
+  // loadFromEEPROM only if it have been saved previously
+  this->loadFromEEPROM();
+  
+  // conntect to the wifi network as
+  // specified on top of the program
+  initWifi(ssid, password);
+
+  pinSetupFunc();
+  
+  // define all routes callable
+  initRouting();
+  initCustomRoutesFunc();
+  
+  // raise an error if another route is called
+  server.onNotFound(handleNotFound);
+  
+  server.begin();
+  Serial.println("HTTP server started");
 }

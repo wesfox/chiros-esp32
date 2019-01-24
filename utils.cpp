@@ -3,16 +3,9 @@
 #include <ArduinoJson.h>
 
 #include "utils.hpp"
+#include "Alfred.hpp"
 
-const char* objConfig = "{\n \"name\": \"coolObject\",\n \"type\": \"lamp\",\n \"actions\": [\n {\n \"name\": \"switch\",\n \"command\": \"\/switch\",\n \"payloads\": [\n {\n \"name\": \"switch\",\n \"type\": \"boolean\"\n }\n ]\n },\n {\n \"name\": \"rgb_color\",\n \"command\": \"\/setColor\",\n \"payloads\": [\n {\n \"name\": \"rgb_color\",\n \"type\": \"string\"\n }\n ]\n },\n {\n \"name\": \"on\",\n \"command\": \"\/on\"\n },\n {\n \"name\": \"off\",\n \"command\": \"\/off\"\n }\n ],\n \"data-source\": [\n {\n \"name\": \"state\",\n \"description\": \"return the state\",\n \"endpoint\": \"\/state\",\n \"data-type\": \"boolean\",\n \"data-polling-type\": \"ON_REQUEST\"\n },{\n \"name\": \"rgb_color\",\n \"description\": \"return the current strip color\",\n \"endpoint\": \"\/setColor\",\n \"data-type\": \"string\",\n \"data-polling-type\": \"ON_REQUEST\"\n }\n ]\n}";
-WebServer server(80);
-Alfred alfred = Alfred();
-Preferences preferences;
-Request request;
-
-Request::Request(){
-  
-}
+Request::Request(){}
 
 JsonObject& Request::parseBody(){
   // reset JsonObject
@@ -23,4 +16,21 @@ JsonObject& Request::parseBody(){
   }else{
     return this->jsonBuffer.createObject();
   }
+}
+
+void initWifi(const char * ssid, const char * password){
+ Serial.println("Initializing wifi connection with:");
+ Serial.print("SSID: ");Serial.println(ssid);
+ Serial.print("Password: ");Serial.println(password);
+ WiFi.mode(WIFI_STA);
+ WiFi.begin(ssid, password);
+
+ // Wait for connection
+ while (WiFi.status() != WL_CONNECTED) {
+  delay(500);
+  Serial.print(".");
+ }
+ Serial.println("");
+ Serial.print("Connected with ip adress: ");
+ Serial.println(WiFi.localIP());
 }

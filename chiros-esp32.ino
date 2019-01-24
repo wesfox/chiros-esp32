@@ -12,11 +12,7 @@
 #include <ESPmDNS.h>
 #include "EEPROM.h"
 
-
 #include "Alfred.hpp"
-#include "DataSource.hpp"
-#include "routeHandlers.hpp"
-#include "utils.hpp"
 
 using namespace std;
 
@@ -73,6 +69,9 @@ using namespace std;
 //    ]
 //}
 
+Alfred alfred;
+WebServer server(80);
+
 //////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////// DO NOT MODIFY ANYTHING ABOVE THIS LINE ////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -123,7 +122,7 @@ void handleSwitch(){
 void handleColor() {
     JsonObject& body = request.parseBody();
    if(body.size()==0){
-    return handleErrorNoPayload();
+    return alfred.handleError(ERROR_ALFRED_NO_PAYLOAD);
    }
    
    String strColor = body["payload"];
@@ -204,64 +203,11 @@ void initCustomRoutes(){
 //////////////////////////////////////////////////////////////////////////////////////////
 
 /////////
-// init
-
-void initWifi(){
- Serial.println("Initializing wifi connection with:");
- Serial.print("SSID: ");Serial.println(ssid);
- Serial.print("Password: ");Serial.println(password);
- WiFi.mode(WIFI_STA);
- WiFi.begin(ssid, password);
-
- // Wait for connection
- while (WiFi.status() != WL_CONNECTED) {
-  delay(500);
-  Serial.print(".");
- }
- Serial.println("");
- Serial.print("Connected with ip adress: ");
- Serial.println(WiFi.localIP());
-}
-
-void initRouting(){
-  server.on("/", handleRoot);
-  server.on("/setpush", handleSetPush);
-
-  // default routes
-  server.on("/config", handleConfig);
-  server.on("/serverConfig", handleSetConfig);
-
-  initCustomRoutes();
-}
-
-/////////
 // SETUP
 
 void setup(void) {
   Serial.begin(115200);
-  
-  // loadFromEEPROM only if it have been saved previously
-  alfred.loadFromEEPROM();
-  
-  pinSetup();
-  customSetup();
-  
-  // conntect to the wifi network as
-  // specified on top of the program
-  initWifi();
-  
-  if (MDNS.begin("esp32")) {
-  Serial.println("MDNS responder started");
-  }
-  
-  // define all routes callable
-  initRouting();
-  
-  // raise an error if another route is called
-  server.onNotFound(handleNotFound);
-  
-  server.begin();
-  Serial.println("HTTP server started");
+  alfred.alfredSetup(pinSetup, customSetup, initCustomRoutes, ssid, password);
 }
 
 /////////
