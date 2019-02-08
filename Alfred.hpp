@@ -8,9 +8,9 @@
 
 #define ERROR_ALFRED_NO_PAYLOAD 1
 
-typedef void (*pinSetupFunc)();
-typedef void (*customSetupFunc)();
-typedef void (*initCustomRoutesFunc)();
+//typedef void (*pinSetupFunc)();
+//typedef void (*customSetupFunc)();
+//typedef void (*initCustomRoutesFunc)();
 
 class Alfred {
    public:
@@ -18,7 +18,7 @@ class Alfred {
       
       void init(const char* url, const char* uid, int port, JsonObject& dataSourceIds);
 
-      void alfredSetup(pinSetupFunc, customSetupFunc, initCustomRoutesFunc, const char * ssid, const char * password);
+      void alfredSetup(const char * ssid, const char * password);
       void handleError(int errorDef);
 
       void saveToEEPROM();
@@ -40,7 +40,6 @@ class Alfred {
       int nbDataSources;
       
       bool initialized;
-      WebServer server;
 };
 
 extern Alfred alfred;

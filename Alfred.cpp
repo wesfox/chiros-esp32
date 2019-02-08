@@ -5,7 +5,7 @@
 #include "DataSource.hpp"
 #include "routeHandlers.hpp"
 
-const char* objConfig = "{\n \"name\": \"coolObject\",\n \"type\": \"lamp\",\n \"actions\": [\n {\n \"name\": \"switch\",\n \"command\": \"\/switch\",\n \"payloads\": [\n {\n \"name\": \"switch\",\n \"type\": \"boolean\"\n }\n ]\n },\n {\n \"name\": \"rgb_color\",\n \"command\": \"\/setColor\",\n \"payloads\": [\n {\n \"name\": \"rgb_color\",\n \"type\": \"string\"\n }\n ]\n },\n {\n \"name\": \"on\",\n \"command\": \"\/on\"\n },\n {\n \"name\": \"off\",\n \"command\": \"\/off\"\n }\n ],\n \"data-source\": [\n {\n \"name\": \"state\",\n \"description\": \"return the state\",\n \"endpoint\": \"\/state\",\n \"data-type\": \"boolean\",\n \"data-polling-type\": \"ON_REQUEST\"\n },{\n \"name\": \"rgb_color\",\n \"description\": \"return the current strip color\",\n \"endpoint\": \"\/setColor\",\n \"data-type\": \"string\",\n \"data-polling-type\": \"ON_REQUEST\"\n }\n ]\n}";
+const char* objConfig = "{\n \"name\": \"coolObject\",\n \"type\": \"rgb_strip\",\n \"actions\": [\n {\n \"name\": \"rgb_color\",\n \"command\": \"\/setColor\",\n \"payload\": \"color\"\n }\n ],\n \"data-source\": [\n {\n \"name\": \"state\",\n \"description\": \"return the current strip color\",\n \"endpoint\": \"\/state\",\n \"data-type\": \"color\",\n \"data-polling-type\": \"ON_REQUEST\"\n }\n ]\n}";
 Preferences preferences;
 Request request;
 
@@ -235,14 +235,16 @@ void initRouting(){
   server.on("/", handleRoot);
   server.on("/setpush", handleSetPush);
 
+  Serial.println("added /config");
+
   // default routes
   server.on("/config", handleConfig);
   server.on("/serverConfig", handleSetConfig);
 }
 
-void Alfred::alfredSetup(pinSetupFunc, customSetupFunc, initCustomRoutesFunc, const char * ssid, const char * password){
+void Alfred::alfredSetup(const char * ssid, const char * password){
   
-  customSetupFunc();
+  // customSetupFunc();
   
   // loadFromEEPROM only if it have been saved previously
   this->loadFromEEPROM();
@@ -251,11 +253,11 @@ void Alfred::alfredSetup(pinSetupFunc, customSetupFunc, initCustomRoutesFunc, co
   // specified on top of the program
   initWifi(ssid, password);
 
-  pinSetupFunc();
+  // pinSetupFunc();
   
   // define all routes callable
   initRouting();
-  initCustomRoutesFunc();
+  // initCustomRoutesFunc();
   
   // raise an error if another route is called
   server.onNotFound(handleNotFound);

@@ -8,6 +8,7 @@
 #include "routeHandlers.hpp"
 
 void handleConfig() {
+  Serial.println("got into handleConfig");
    server.send(200, "text/json", objConfig);
 }
 

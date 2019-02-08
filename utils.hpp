@@ -6,13 +6,13 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-#define ALFRED_SERIAL_SIZE 2000
-#define DATASOURCE_SERIAL_SIZE 300
-#define ALL_DATASOURCE_SERIAL_SIZE 1000
+#define ALFRED_SERIAL_SIZE 1500
+#define DATASOURCE_SERIAL_SIZE 200
+#define ALL_DATASOURCE_SERIAL_SIZE 500
 
 class Request{
   public:
-    StaticJsonBuffer<1000> jsonBuffer;
+    StaticJsonBuffer<500> jsonBuffer;
     
     Request();
     JsonObject& parseBody();
