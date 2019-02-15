@@ -2,6 +2,7 @@
 
 #include "DataSource.hpp"
 #include "utils.hpp"
+#include <Preferences.h>
 
 #ifndef ALFRED_H
 #define ALFRED_H
@@ -16,7 +17,7 @@ class Alfred {
    public:
       Alfred();
       
-      void init(const char* url, const char* uid, int port, JsonObject& dataSourceIds);
+      void init(const char* url, const char* uid, int port, JsonObject& dataSourceIds, String objConfig);
 
       void alfredSetup(const char * ssid, const char * password);
       void handleError(int errorDef);
@@ -43,7 +44,7 @@ class Alfred {
 };
 
 extern Alfred alfred;
-extern const char* objConfig;
+extern String DefaultObjConfig;
 extern Preferences preferences;
 extern Request request;
 extern WebServer server;

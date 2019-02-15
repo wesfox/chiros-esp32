@@ -5,7 +5,7 @@
 #include "DataSource.hpp"
 #include "routeHandlers.hpp"
 
-const char* objConfig = "{\n \"name\": \"coolObject\",\n \"type\": \"rgb_strip\",\n \"actions\": [\n {\n \"name\": \"rgb_color\",\n \"command\": \"\/setColor\",\n \"payload\": \"color\"\n }\n ],\n \"data-source\": [\n {\n \"name\": \"state\",\n \"description\": \"return the current strip color\",\n \"endpoint\": \"\/state\",\n \"data-type\": \"color\",\n \"data-polling-type\": \"ON_REQUEST\"\n }\n ]\n}";
+String DefaultObjConfig = "{\n \"name\": \"presenceDetector\",\n \"type\": \"detector\",\n \"actions\": [\n {\n \"name\": \"presence\",\n \"command\": \"\/presence\",\n \"payloads\": [\n {\n \"name\": \"presence\",\n \"type\": \"boolean\"\n }\n ]\n }\n ],\n \"data-source\": [{\n \"name\": \"presence_state\",\n \"description\": \"return the current presence state\",\n \"endpoint\": \"\/setColor\",\n \"data-type\": \"boolean\",\n \"data-polling-type\": \"ON_REQUEST\"\n }\n ]\n}";
 Preferences preferences;
 Request request;
 
@@ -14,9 +14,11 @@ Alfred::Alfred() {
   this->initialized = false;
 }
 
-void Alfred::init(const char* url, const char* uid, int port, JsonObject& dataSourceIds) {
+void Alfred::init(const char* url, const char* uid, int port, JsonObject& dataSourceIds, String objConfig) {
   StaticJsonBuffer<ALFRED_SERIAL_SIZE> jsonBuffer;
-
+  
+  objConfig = DefaultObjConfig;
+  
   JsonObject& jsonConfig = jsonBuffer.parseObject(objConfig);
   JsonArray& dataSources = jsonConfig["data-source"];
 
@@ -109,9 +111,9 @@ void Alfred::loadFromEEPROM(){
   StaticJsonBuffer<DATASOURCE_SERIAL_SIZE> dataSourceBuffer;
   JsonObject& alfredObject = jsonBuffer.parseObject(alfredSerialized);
   
-  this->url = alfredObject.get<String>("url");
+  this->url = String(alfredObject.get<String>("url"));
   this->port = alfredObject["port"];
-  this->uid = alfredObject.get<String>("uid");
+  this->uid = String(alfredObject.get<String>("uid"));
   
   this->nbDataSources = alfredObject["nbDataSources"];
   this->dataSourceList = new DataSource[this->nbDataSources];

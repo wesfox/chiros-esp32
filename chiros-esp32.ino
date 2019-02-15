@@ -3,7 +3,6 @@
 #include <ArduinoJson.h>
 // https://github.com/Makuna/NeoPixelBus/blob/master/examples/NeoPixelTest/NeoPixelTest.ino
 #include <NeoPixelBus.h>
-#include <Preferences.h>
 
 #include <WiFi.h>
 #include <WiFiClient.h>
@@ -19,17 +18,27 @@ using namespace std;
 // https://www.freeformatter.com/json-escape.html
 
 //any modification of this file must be repercuted in the EEPROM
-//"{\n \"name\": \"coolObject\",\n \"type\": \"lamp\",\n \"actions\": [\n {\n \"name\": \"switch\",\n \"command\": \"\/switch\",\n \"payloads\": [\n {\n \"name\": \"switch\",\n \"type\": \"boolean\"\n }\n ]\n },\n {\n \"name\": \"rgb_color\",\n \"command\": \"\/setColor\",\n \"payloads\": [\n {\n \"name\": \"rgb_color\",\n \"type\": \"string\"\n }\n ]\n },\n {\n \"name\": \"on\",\n \"command\": \"\/on\"\n },\n {\n \"name\": \"off\",\n \"command\": \"\/off\"\n }\n ],\n \"data-source\": [\n {\n \"name\": \"state\",\n \"description\": \"return the state\",\n \"endpoint\": \"\/state\",\n \"data-type\": \"boolean\",\n \"data-polling-type\": \"ON_REQUEST\"\n },{\n \"name\": \"rgb_color\",\n \"description\": \"return the current strip color\",\n \"endpoint\": \"\/setColor\",\n \"data-type\": \"string\",\n \"data-polling-type\": \"ON_REQUEST\"\n }\n ]\n}";
+//"{\n\"name\":\"coolObject\",\n\"type\":\"lamp\",\n\"actions\":[\n{\n\"name\":\"switch_state"\",\n\"command\":\"\/switch\",\n\"payloads\":[\n{\n\"name\":\"switch_state"\",\n\"type\":\"boolean\"\n}\n]\n},\n{\n\"name\":\"presence\",\n\"command\":\"\/presence\",\n\"payloads\":[\n{\n\"name\":\"presence\",\n\"type\":\"boolean\"\n}\n]\n},\n{\n\"name\":\"rgb_color\",\n\"command\":\"\/setColor\",\n\"payloads\":[\n{\n\"name\":\"rgb_color\",\n\"type\":\"string\"\n}\n]\n},\n{\n\"name\":\"on\",\n\"command\":\"\/on\"\n},\n{\n\"name\":\"off\",\n\"command\":\"\/off\"\n}\n],\n\"data-source\":[\n{\n\"name\":\"switch_state"_state\",\n\"description\":\"returntheswitchstate\",\n\"endpoint\":\"\/switch\",\n\"data-type\":\"boolean\",\n\"data-polling-type\":\"ON_REQUEST\"\n},{\n\"name\":\"rgb_color\",\n\"description\":\"returnthecurrentstripcolor\",\n\"endpoint\":\"\/setColor\",\n\"data-type\":\"string\",\n\"data-polling-type\":\"ON_REQUEST\"\n},{\n\"name\":\"presence_state\",\n\"description\":\"returnthecurrentpresencestate\",\n\"endpoint\":\"\/setColor\",\n\"data-type\":\"boolean\",\n\"data-polling-type\":\"ON_REQUEST\"\n}\n]\n}";
 //{
 //    "name": "coolObject",
 //    "type": "lamp",
 //    "actions": [
 //        {
-//            "name": "switch",
+//            "name": "switch_state",
 //            "command": "/switch",
 //            "payloads": [
 //                {
-//                    "name": "switch",
+//                    "name": "switch_state",
+//                    "type": "boolean"
+//                }
+//            ]
+//        },
+//        {
+//            "name": "presence",
+//            "command": "/presence",
+//            "payloads": [
+//                {
+//                    "name": "presence",
 //                    "type": "boolean"
 //                }
 //            ]
@@ -55,9 +64,9 @@ using namespace std;
 //    ],
 //    "data-source": [
 //        {
-//            "name": "state",
-//            "description": "return the state",
-//            "endpoint": "/state",
+//            "name": "switch_state"_state",
+//            "description": "return the switch state",
+//            "endpoint": "/switch",
 //            "data-type": "boolean",
 //            "data-polling-type": "ON_REQUEST"
 //        },{
@@ -65,6 +74,135 @@ using namespace std;
 //            "description": "return the current strip color",
 //            "endpoint": "/setColor",
 //            "data-type": "string",
+//            "data-polling-type": "ON_REQUEST"
+//        },{
+//            "name": "presence",
+//            "description": "return the current presence state",
+//            "endpoint": "/setColor",
+//            "data-type": "boolean",
+//            "data-polling-type": "ON_REQUEST"
+//        }
+//    ]
+//}
+
+//any modification of this file must be repercuted in the EEPROM
+//"{\"name\":\"theNewWave\",\"type\":\"lamp\",\"actions\":[{\"name\":\"switch_state\",\"command\":\"\/switch\",\"payloads\":[{\"name\":\"switch_state\",\"type\":\"boolean\"}]},{\"name\":\"presence\",\"command\":\"\/presence\",\"payloads\":[{\"name\":\"presence\",\"type\":\"boolean\"}]},{\"name\":\"rgb_color\",\"command\":\"\/color\",\"payloads\":[{\"name\":\"rgb_color\",\"type\":\"string\"}]}],\"data-source\":[{\"name\":\"switch_state\",\"description\":\"\",\"endpoint\":\"\/switch\",\"data-type\":\"boolean\",\"data-polling-type\":\"ON_REQUEST\"},{\"name\":\"rgb_color\",\"description\":\"\",\"endpoint\":\"\/color\",\"data-type\":\"string\",\"data-polling-type\":\"ON_REQUEST\"},{\"name\":\"presence_state\",\"description\":\"\",\"endpoint\":\"\/presence\",\"data-type\":\"boolean\",\"data-polling-type\":\"ON_REQUEST\"}]}";
+//{
+//    "name": "theNewWave",
+//    "type": "lamp",
+//    "actions": [
+//        {
+//            "name": "switch_state",
+//            "command": "/switch",
+//            "payloads": [
+//                {
+//                    "name": "switch_state",
+//                    "type": "boolean"
+//                }
+//            ]
+//        },
+//        {
+//            "name": "presence",
+//            "command": "/presence",
+//            "payloads": [
+//                {
+//                    "name": "presence",
+//                    "type": "boolean"
+//                }
+//            ]
+//        },
+//        {
+//            "name": "rgb_color",
+//            "command": "/color",
+//            "payloads": [
+//                {
+//                    "name": "rgb_color",
+//                    "type": "string"
+//                }
+//            ]
+//        },
+//    ],
+//    "data-source": [
+//        {
+//            "name": "switch_state",
+//            "description": "",
+//            "endpoint": "/switch",
+//            "data-type": "boolean",
+//            "data-polling-type": "ON_REQUEST"
+//        },{
+//            "name": "rgb_color",
+//            "description": "",
+//            "endpoint": "/color",
+//            "data-type": "string",
+//            "data-polling-type": "ON_REQUEST"
+//        },{
+//            "name": "presence",
+//            "description": "",
+//            "endpoint": "/presence",
+//            "data-type": "boolean",
+//            "data-polling-type": "ON_REQUEST"
+//        }
+//    ]
+//}
+
+//any modification of this file must be repercuted in the EEPROM
+//"{\n \"name\": \"presenceDetector\",\n \"type\": \"detector\",\n \"actions\": [\n {\n \"name\": \"presence\",\n \"command\": \"\/presence\",\n \"payloads\": [\n {\n \"name\": \"presence\",\n \"type\": \"boolean\"\n }\n ]\n }\n ],\n \"data-source\": [{\n \"name\": \"presence_state\",\n \"description\": \"return the current presence state\",\n \"endpoint\": \"\/setColor\",\n \"data-type\": \"boolean\",\n \"data-polling-type\": \"ON_REQUEST\"\n }\n ]\n}";
+//{
+//    "name": "presenceDetector",
+//    "type": "dectector",
+//    "actions": [
+//         {
+//            "name": "presence",
+//            "command": "/presence",
+//            "payloads": [
+//                {
+//                    "name": "presence",
+//                    "type": "boolean"
+//                }
+//            ]
+//        }
+//    ],
+//    "data-source": [{
+//            "name": "presence",
+//            "description": "return the current presence state",
+//            "endpoint": "/presence",
+//            "data-type": "boolean",
+//            "data-polling-type": "ON_REQUEST"
+//        }
+//    ]
+//}
+
+//any modification of this file must be repercuted in the EEPROM
+//"{\n \"name\": \"coolObject\",\n \"type\": \"lamp\",\n \"actions\": [\n {\n  \"name\": \"switch_state\",\n  \"command\": \"\/switch\",\n  \"payloads\": [\n  {\n   \"name\": \"switch_state\",\n   \"type\": \"boolean\"\n  }\n  ]\n },\n {\n  \"name\": \"on\",\n  \"command\": \"\/on\"\n },\n {\n  \"name\": \"off\",\n  \"command\": \"\/off\"\n }\n ],\n \"data-source\": [\n {\n  \"name\": \"switch_state\",\n  \"description\": \"return the switch state\",\n  \"endpoint\": \"\/switch\",\n  \"data-type\": \"boolean\",\n  \"data-polling-type\": \"ON_REQUEST\"\n }\n ]\n}";
+//{
+//    "name": "coolObject",
+//    "type": "lamp",
+//    "actions": [
+//        {
+//            "name": "switch_state",
+//            "command": "/switch",
+//            "payloads": [
+//                {
+//                    "name": "switch_state",
+//                    "type": "boolean"
+//                }
+//            ]
+//        },
+//        {
+//            "name": "on",
+//            "command": "/on"
+//        },
+//        {
+//            "name": "off",
+//            "command": "/off"
+//        }
+//    ],
+//    "data-source": [
+//        {
+//            "name": "switch_state"_state",
+//            "description": "return the switch state",
+//            "endpoint": "/switch",
+//            "data-type": "boolean",
 //            "data-polling-type": "ON_REQUEST"
 //        }
 //    ]
@@ -109,10 +247,12 @@ WebServer server(80);
 
 //const char* ssid = "Dinosorus";
 //const char* password = "LaRicanerieDeDinosorus";
-//const char* ssid = "{VIA}";
-//const char* password = "connexion";
-const char* ssid = "Livebox-BABA";
-const char* password = "HRZxJmJyUjWPb7Cymw";
+const char* ssid = "{VIA}";
+const char* password = "connexion";
+//const char* ssid = "Livebox-BABA";
+//const char* password = "HRZxJmJyUjWPb7Cymw";
+//const char* ssid = "Daniel's iPhone";
+//const char* password = "unicornsarecool";
 
 // BVR
 // Adafruit_NeoPixel pixels = Adafruit_NeoPixel(3, 14, NEO_KHZ800 + NEO_GRB);
@@ -121,9 +261,11 @@ const uint8_t PixelPin = 25;  // make sure to set this to the correct pin, ignor
 NeoPixelBus<NeoGrbFeature, Neo800KbpsMethod> pixels(PixelCount, PixelPin);
 
 const uint8_t SwitchPin = 17;
+const uint8_t DetectPin = 18;
 
 void pinSetup(){
   pinMode(SwitchPin, OUTPUT);
+  pinMode(DetectPin, INPUT);
   digitalWrite(SwitchPin, HIGH);
 }
 
@@ -136,15 +278,23 @@ void customSetup() {
   pixels.SetPixelColor(0, red);
   pixels.SetPixelColor(1, green);
   pixels.Show();
+  digitalWrite(SwitchPin, alfred.getDataSource("switch_state").serializedState == "true" ? HIGH : LOW);
 }
 
 void handleSwitch(){
   // we cannot use HIGH and LOW as we want to make sure to use 0 or 1.
-  int state = digitalRead(SwitchPin) ? 0 : 1;
+  Serial.println("got into handleSwitch");
+  JsonObject& body = request.parseBody();
+  int state;
+  if(body.size()==0){
+    state = digitalRead(SwitchPin) ? 0 : 1;
+  }else{
+    state = body["payload"].as<boolean>() ? 1 : 0;
+  }
   digitalWrite(SwitchPin, state);
-  alfred.getDataSource("state").serializedState = state ? "true" : "false";
+  alfred.getDataSource("switch_state").serializedState = state ? "true" : "false";
   server.send(200, "text/plain", "Lamped switched " + String(state ? "on" : "off"));
-  alfred.sendState("state");
+  alfred.sendState("switch_state");
   Serial.println("/switch - Lamped switched " + String(state ? "on" : "off"));
 }
 
@@ -195,33 +345,43 @@ void handleColor() {
 
    String serializedState;
    body["payload"].printTo(serializedState);
-    alfred.getDataSource("state").serializedState = serializedState;
+    alfred.getDataSource("rgb_color").serializedState = serializedState;
     Serial.println(serializedState);
-    alfred.sendState("state");
+    alfred.sendState("rgb_color");
+}
+
+const unsigned long timeUntilStop = 20000;//30 * 60 * 1000;
+
+unsigned long timeLastDectect = 0;
+unsigned long timeLastNotDectect = 0;
+int durationDetection = 0;
+boolean movementDectected = false;
+boolean personDectected = false;
+void customLoop(){
+  movementDectected = digitalRead(DetectPin);
+  if(movementDectected){
+    timeLastDectect = millis();
+    if(!personDectected){
+      alfred.getDataSource("presence").serializedState = "true";
+      personDectected = true;
+      alfred.sendState("presence");
+      Serial.println("You have been detected");
+    }
+  }
+  if(personDectected && abs(millis()-timeLastDectect) > timeUntilStop){
+    personDectected = false;
+    alfred.getDataSource("presence").serializedState = "false";
+    alfred.sendState("presence");
+    Serial.println("You do not exist anymore");
+  }
 }
 
 // custom routes
 void initCustomRoutes(){
 
   // you may use the extractPostedPayload function to retrieve posted data
-  
   server.on("/switch", handleSwitch);
-  server.on("/on", []() {
-    digitalWrite(SwitchPin, HIGH);
-    alfred.getDataSource("state").serializedState = "true";
-    alfred.sendState("state");
-    server.send(200, "text/plain", "Lamped switched on");
-    Serial.println("/on - Lamped switched on");
-  });
-  server.on("/off", []() {
-    digitalWrite(SwitchPin, LOW);
-    alfred.getDataSource("state").serializedState = "false";
-    alfred.sendState("state");
-    server.send(200, "text/plain", "Lamped switched off");
-    Serial.println("/on - Lamped switched off");
-  });
-
-  server.on("/setColor", handleColor);
+  server.on("/color", handleColor);
 
   Serial.println("configured custom routes");
 
@@ -256,9 +416,29 @@ void setup(void) {
   initCustomRoutes();
 }
 
+void interpretSerial(String serialWordSent){
+  Serial.println("Got : " + serialWordSent);
+  if(serialWordSent.equals("reset object")){
+    Serial.println("to be implemented");
+    //alfred.init(registerPayload["url"], registerPayload["id"], registerPayload["port"], registerPayload["data-source-ids"], serialWordSent);
+  }
+}
+
+String serialWordSent = "";
+char incomingByte = '\0';
+
 /////////
 // LOOP
 void loop(void) {
   server.handleClient();
+  customLoop();
   alfred.checkForDataToPush();
+  //  if (Serial.available() > 0) {
+  //    incomingByte = Serial.read();
+  //    if(incomingByte == \n){
+  //      interpretSerial(serialWordSent);
+  //    }else{
+  //      serialWordSent += incomingByte;
+  //    }
+  //  }
 }
