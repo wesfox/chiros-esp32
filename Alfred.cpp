@@ -5,7 +5,7 @@
 #include "DataSource.hpp"
 #include "routeHandlers.hpp"
 
-String DefaultObjConfig = "{\n \"name\": \"presenceDetector\",\n \"type\": \"detector\",\n \"actions\": [\n {\n \"name\": \"presence\",\n \"command\": \"\/presence\",\n \"payloads\": [\n {\n \"name\": \"presence\",\n \"type\": \"boolean\"\n }\n ]\n }\n ],\n \"data-source\": [{\n \"name\": \"presence_state\",\n \"description\": \"return the current presence state\",\n \"endpoint\": \"\/setColor\",\n \"data-type\": \"boolean\",\n \"data-polling-type\": \"ON_REQUEST\"\n }\n ]\n}";
+String DefaultObjConfig = "{\"name\":\"coolObject\",\"type\":\"lamp\",\"actions\":[{\"name\":\"switch_state\",\"command\":\"/switch\",\"payloads\":[{\"name\":\"switch_state\",\"type\":\"boolean\"}]},{\"name\":\"presence\",\"command\":\"/presence\",\"payloads\":[{\"name\":\"presence\",\"type\":\"boolean\"}]},{\"name\":\"rgb_color\",\"command\":\"/color\",\"payloads\":[{\"name\":\"rgb_color\",\"type\":\"color\"}]}],\"data-source\":[{\"name\":\"switch_state\",\"description\":\"desc\",\"endpoint\":\"/switch\",\"data-type\":\"boolean\",\"data-polling-type\":\"ON_REQUEST\"},{\"name\":\"rgb_color\",\"description\":\"desc\",\"endpoint\":\"/color\",\"data-type\":\"color\",\"data-polling-type\":\"ON_REQUEST\"},{\"name\":\"presence\",\"description\":\"desc\",\"endpoint\":\"/presence\",\"data-type\":\"boolean\",\"data-polling-type\":\"ON_REQUEST\"}]}";
 Preferences preferences;
 Request request;
 
@@ -162,7 +162,22 @@ void Alfred::sendState(String sourceName){
   Serial.println("Send : " + strPayload);
   Serial.println("To : http://" + this->url + ":" + String(this->port) + "/saveDataPoint");
   int httpResponseCode = http.POST(strPayload);
+  if(httpResponseCode!=-1){
+    this->initialized = true;
+  }
   Serial.println("Http response code : "+String(httpResponseCode));
+  http.end();
+}
+
+boolean Alfred::testIsAlfredUp(){
+  HTTPClient http;
+  http.begin("http://" + this->url + ":" + String(this->port) + "/");
+  Serial.println("Try calling : http://" + this->url + ":" + String(this->port) + "/");
+  if(http.GET() != -1){
+    return true;
+  }else{
+    return false;
+  }
   http.end();
 }
 

@@ -27,6 +27,7 @@ class Alfred {
       
       void showConf();
       void sendState(String sourceName);
+      boolean testIsAlfredUp();
       
       DataSource& getDataSource(String dataSourceName);
       DataSource& getDataSourceById(String dataSourceUid);
